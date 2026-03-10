@@ -1,11 +1,11 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import type { User } from '../data/dummyData';
-import { getUserByEmail, addUser } from '../data/dummyData';
+import type { User } from '../types.ts';
+import { loginAPI, signupAPI } from "../services/api";
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => boolean;
-  signup: (name: string, email: string, password: string) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
 }
@@ -13,35 +13,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('helplist_user');
     return saved ? JSON.parse(saved) : null;
   });
 
-  const login = (email: string, password: string): boolean => {
-    const foundUser = getUserByEmail(email);
-    if (foundUser && foundUser.password === password) {
-      setUser(foundUser);
-      localStorage.setItem('helplist_user', JSON.stringify(foundUser));
-      return true;
-    }
-    return false;
+  const login = async (email: string, password: string): Promise<boolean> => {
+    const user = await loginAPI(email, password);
+
+    if (!user) return false;
+
+    setUser(user);
+    localStorage.setItem("helplist_user", JSON.stringify(user));
+    return true;
   };
 
-  const signup = (name: string, email: string, password: string): boolean => {
-    const existingUser = getUserByEmail(email);
-    if (existingUser) {
-      return false;
-    }
-    const newUser = addUser({
-      name,
-      email,
-      password,
-      role: 'volunteer',
-      profilePhoto: '',
-    });
-    setUser(newUser);
-    localStorage.setItem('helplist_user', JSON.stringify(newUser));
+  const signup = async (
+    name: string,
+    email: string,
+    password: string
+  ): Promise<boolean> => {
+
+    const user = await signupAPI(name, email, password);
+
+    if (!user) return false;
+
+    setUser(user);
+    localStorage.setItem("helplist_user", JSON.stringify(user));
     return true;
   };
 
@@ -67,9 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+
   return context;
 }
 
@@ -77,5 +78,6 @@ export function getProfilePhotoUrl(photo: string | undefined): string {
   if (!photo || photo === '') {
     return 'https://png.pngtree.com/png-clipart/20200224/original/pngtree-avatar-icon-profile-icon-member-login-vector-isolated-png-image_5247852.jpg';
   }
+
   return photo;
 }

@@ -10,7 +10,7 @@ export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -19,16 +19,16 @@ export function Login() {
       return;
     }
 
-    const success = login(email, password);
+    const success = await login(email, password);
+
     if (success) {
-      setTimeout(() => {
-        const user = JSON.parse(localStorage.getItem('helplist_user') || '{}');
-        if (user.role === 'admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
-      }, 100);
+      const user = JSON.parse(localStorage.getItem('helplist_user') || '{}');
+
+      if (user.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } else {
       setError('Invalid email or password');
     }
@@ -37,6 +37,7 @@ export function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
+
         <div className="auth-logo">
           <h1>The Help List</h1>
           <p>Welcome back! Please login to continue.</p>
@@ -45,8 +46,10 @@ export function Login() {
         {error && <div className="alert alert-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
+
           <div className="form-group">
             <label className="form-label">Email</label>
+
             <div style={{ position: 'relative' }}>
               <Mail
                 size={18}
@@ -58,6 +61,7 @@ export function Login() {
                   color: 'var(--text-muted)',
                 }}
               />
+
               <input
                 type="email"
                 className="form-input"
@@ -71,6 +75,7 @@ export function Login() {
 
           <div className="form-group">
             <label className="form-label">Password</label>
+
             <div style={{ position: 'relative' }}>
               <Lock
                 size={18}
@@ -82,6 +87,7 @@ export function Login() {
                   color: 'var(--text-muted)',
                 }}
               />
+
               <input
                 type="password"
                 className="form-input"
@@ -93,9 +99,14 @@ export function Login() {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg"
+            style={{ width: '100%' }}
+          >
             Login
           </button>
+
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-secondary)' }}>
@@ -121,6 +132,7 @@ export function Login() {
           <br />
           User: john@example.com / user123
         </div>
+
       </div>
     </div>
   );
